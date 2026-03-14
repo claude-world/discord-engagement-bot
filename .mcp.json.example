@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "trend-pulse": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "trend_pulse.server"],
+      "env": {}
+    },
+    "cf-browser": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "cf_browser_mcp.server"],
+      "env": {
+        "CF_BROWSER_URL": "https://your-cf-browser-worker.workers.dev",
+        "CF_BROWSER_API_KEY": "your-api-key"
+      }
+    }
+  }
+}

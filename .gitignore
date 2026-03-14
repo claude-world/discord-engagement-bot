@@ -6,3 +6,4 @@ dist/
 out/
 .playwright-mcp/
 data/
+.mcp.json

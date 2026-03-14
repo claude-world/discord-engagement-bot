@@ -1,13 +1,14 @@
-import { SYSTEM_CONTEXT, getTodayTopic, getKnowledgeInstructions } from './context.js';
+import { SYSTEM_CONTEXT, MCP_INSTRUCTIONS, getTodayTopic, getKnowledgeInstructions } from './context.js';
 
 export function buildDiscussionPrompt(): string {
   const topic = getTodayTopic();
   const knowledge = getKnowledgeInstructions(topic.knowledgeKeys);
 
   return `${SYSTEM_CONTEXT}
+${MCP_INSTRUCTIONS}
 ${knowledge}
 
-任務：寫一則「午間討論」貼文，引導社群成員互動。
+任務：寫一則「午間討論」貼文，引導社群成員互動。先用 trend-pulse 查看有沒有相關趨勢可以結合。
 
 討論風格：${topic.discussion}
 

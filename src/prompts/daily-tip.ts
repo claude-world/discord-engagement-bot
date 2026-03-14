@@ -1,13 +1,14 @@
-import { SYSTEM_CONTEXT, getTodayTopic, getKnowledgeInstructions } from './context.js';
+import { SYSTEM_CONTEXT, MCP_INSTRUCTIONS, getTodayTopic, getKnowledgeInstructions } from './context.js';
 
 export function buildDailyTipPrompt(): string {
   const topic = getTodayTopic();
   const knowledge = getKnowledgeInstructions(topic.knowledgeKeys);
 
   return `${SYSTEM_CONTEXT}
+${MCP_INSTRUCTIONS}
 ${knowledge}
 
-任務：寫一則「每日技巧」貼文。
+任務：寫一則「每日技巧」貼文。先用 trend-pulse 查看有沒有相關趨勢可以結合。
 
 主題方向：${topic.tip}
 

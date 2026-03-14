@@ -2,6 +2,7 @@
  * Shared system context for all content generation prompts.
  * Defines community personality, tone, and constraints.
  * References knowledge files for factual accuracy.
+ * Integrates MCP tools (trend-pulse, cf-browser) for real-time data.
  */
 import { resolve } from 'path';
 
@@ -14,6 +15,12 @@ export const KNOWLEDGE_FILES: Record<string, string> = {
   hooks: resolve(KNOWLEDGE_DIR, 'hooks-guide.md'),
   agents: resolve(KNOWLEDGE_DIR, 'agents-skills-guide.md'),
   workflow: resolve(KNOWLEDGE_DIR, 'workflow-tips.md'),
+  tutorials: resolve(KNOWLEDGE_DIR, 'claude-world-tutorials.md'),
+  cookbooks: resolve(KNOWLEDGE_DIR, 'claude-cookbooks.md'),
+  skills: resolve(KNOWLEDGE_DIR, 'official-skills-reference.md'),
+  prompteng: resolve(KNOWLEDGE_DIR, 'prompt-engineering.md'),
+  tooluse: resolve(KNOWLEDGE_DIR, 'tool-use-guide.md'),
+  api: resolve(KNOWLEDGE_DIR, 'anthropic-api-fundamentals.md'),
 };
 
 /**
@@ -28,27 +35,27 @@ export const DAY_TOPICS: Record<number, {
   1: {
     tip: 'CLAUDE.md 設定與最佳實踐',
     discussion: '這週你打算用 Claude Code 做什麼？',
-    knowledgeKeys: ['basics', 'claudemd'],
+    knowledgeKeys: ['basics', 'claudemd', 'tutorials'],
   },
   2: {
     tip: 'MCP 整合與自建 Server',
     discussion: '經驗分享：你最常用的 MCP server？',
-    knowledgeKeys: ['basics', 'mcp'],
+    knowledgeKeys: ['basics', 'mcp', 'tooluse'],
   },
   3: {
     tip: 'Hooks 系統與安全防護',
     discussion: 'Cowork 準備：今晚你要做什麼？',
-    knowledgeKeys: ['basics', 'hooks'],
+    knowledgeKeys: ['basics', 'hooks', 'tutorials'],
   },
   4: {
     tip: 'Agents、Skills 與自動化',
     discussion: 'A/B 選擇：你偏好哪種開發模式？',
-    knowledgeKeys: ['basics', 'agents'],
+    knowledgeKeys: ['basics', 'agents', 'skills'],
   },
   5: {
     tip: '進階工作流程與效率技巧',
     discussion: '本週最大的收穫是什麼？',
-    knowledgeKeys: ['basics', 'workflow'],
+    knowledgeKeys: ['basics', 'workflow', 'cookbooks'],
   },
 };
 
@@ -75,6 +82,30 @@ ${files.map(f => `- ${f}`).join('\n')}
 用這些檔案中的具體功能、指令、設定格式來寫內容。不要虛構不存在的功能。`;
 }
 
+/**
+ * MCP tool usage instructions.
+ * trend-pulse: real-time trending topics
+ * cf-browser: fetch web content for reference
+ */
+export const MCP_INSTRUCTIONS = `
+你有以下 MCP 工具可以使用：
+
+1. **trend-pulse** — 即時趨勢資料
+   - 用 get_trending(geo="TW", count=5) 查詢台灣熱門話題
+   - 用 search_trends(query="Claude Code") 搜尋相關趨勢
+   - 在寫內容前先查趨勢，讓貼文更有時效性
+
+2. **cf-browser** — 網頁內容抓取
+   - 用 browser_markdown(url) 抓取網頁內容轉 markdown
+   - 可以抓 Anthropic 官方部落格、文件等最新資訊
+   - 用 browser_screenshot(url) 截圖
+
+工作流程：
+1. 先用 trend-pulse 查詢相關趨勢
+2. 如果需要參考最新資訊，用 cf-browser 抓取
+3. 結合趨勢和知識檔案來寫內容
+`;
+
 export const SYSTEM_CONTEXT = `你是 Claude World Taiwan 的社群 Bot。
 
 社群背景：
@@ -82,6 +113,7 @@ export const SYSTEM_CONTEXT = `你是 Claude World Taiwan 的社群 Bot。
 - 成員大多是台灣軟體工程師，使用 Claude Code CLI 開發
 - 社群語言：繁體中文（台灣用語）
 - Discord 伺服器：Claude World Taiwan
+- 網站：claude-world.com（有 24 門免費教學課程）
 
 內容規範：
 - 使用繁體中文，台灣常用語（「程式碼」不是「代碼」，「資料庫」不是「數據庫」）
@@ -102,4 +134,5 @@ export const SYSTEM_CONTEXT = `你是 Claude World Taiwan 的社群 Bot。
 - Agent Teams 多代理協作
 - 工作流程優化（/loop, worktree, /compact, 模型選擇策略）
 - Plugins 系統
+- Anthropic API 與 SDK 使用
 `;
