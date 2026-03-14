@@ -29,7 +29,7 @@ export async function generateContent(
   if (cli === 'codex') {
     args = ['exec', prompt];
   } else {
-    args = ['-p', '--model', 'haiku'];
+    args = ['-p'];
     if (useMcp) {
       args.push('--mcp-config', MCP_CONFIG);
     }

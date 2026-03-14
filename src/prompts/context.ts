@@ -90,20 +90,34 @@ ${files.map(f => `- ${f}`).join('\n')}
 export const MCP_INSTRUCTIONS = `
 你有以下 MCP 工具可以使用：
 
-1. **trend-pulse** — 即時趨勢資料
-   - 用 get_trending(geo="TW", count=5) 查詢台灣熱門話題
-   - 用 search_trends(query="Claude Code") 搜尋相關趨勢
-   - 在寫內容前先查趨勢，讓貼文更有時效性
+1. **trend-pulse** — 即時趨勢聚合器（20 個免費來源，零認證）
+   - get_trending(geo="TW", count=5) — 台灣熱門話題（合併排名）
+   - search_trends(query="Claude Code") — 跨來源搜尋
+   - list_sources() — 列出所有來源
 
-2. **cf-browser** — 網頁內容抓取
-   - 用 browser_markdown(url) 抓取網頁內容轉 markdown
-   - 可以抓 Anthropic 官方部落格、文件等最新資訊
-   - 用 browser_screenshot(url) 截圖
+   可用來源：
+   - Google Trends / Google News — 即時搜尋趨勢和新聞
+   - Hacker News / Lobste.rs — 科技社群熱門
+   - GitHub Trending — 熱門 repos
+   - Reddit / Mastodon / Bluesky — 社群熱門話題
+   - Stack Overflow — 熱門技術問題
+   - dev.to — 開發者文章
+   - ArXiv — 研究論文
+   - npm / PyPI / Docker Hub — 套件趨勢
+   - PTT / Dcard — 台灣社群平台
+
+2. **cf-browser** — 網頁內容抓取（Cloudflare Browser Rendering）
+   - browser_markdown(url) — 抓網頁轉 markdown
+   - browser_content(url) — 抓網頁純文字
+   - browser_screenshot(url) — 截圖
+   - browser_links(url) — 抓連結
+   - 可以抓 Anthropic 官方部落格（claude.ai/blog）、文件等最新資訊
 
 工作流程：
-1. 先用 trend-pulse 查詢相關趨勢
-2. 如果需要參考最新資訊，用 cf-browser 抓取
-3. 結合趨勢和知識檔案來寫內容
+1. 先用 trend-pulse 查詢 AI / Claude 相關趨勢
+2. 如果發現有趣的趨勢，用 cf-browser 抓取詳細內容
+3. 結合趨勢、最新資訊和知識檔案來寫有時效性的內容
+4. 如果趨勢不相關，就只用知識檔案寫技巧內容
 `;
 
 export const SYSTEM_CONTEXT = `你是 Claude World Taiwan 的社群 Bot。
