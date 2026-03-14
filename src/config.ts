@@ -10,6 +10,8 @@ const ConfigSchema = z.object({
   CHANNEL_DAILY_TIPS: z.string().min(1, 'CHANNEL_DAILY_TIPS is required'),
   CHANNEL_GENERAL: z.string().min(1, 'CHANNEL_GENERAL is required'),
   CHANNEL_ANNOUNCEMENTS: z.string().min(1, 'CHANNEL_ANNOUNCEMENTS is required'),
+  CHANNEL_NEWS: z.string().default(''),
+  CHANNEL_SHOWCASE: z.string().default(''),
   CHANNEL_BOT_LOGS: z.string().default(''),
   CLAUDE_CLI_PATH: z.string().default('claude'),
   CONTENT_TIMEOUT: z.string().default('60000').transform(Number).pipe(z.number().int().min(5000).max(300000)),
@@ -36,6 +38,8 @@ const CHANNEL_MAP: Record<string, keyof Config> = {
   'daily-tips': 'CHANNEL_DAILY_TIPS',
   'general': 'CHANNEL_GENERAL',
   'announcements': 'CHANNEL_ANNOUNCEMENTS',
+  'news': 'CHANNEL_NEWS',
+  'showcase': 'CHANNEL_SHOWCASE',
   'bot-logs': 'CHANNEL_BOT_LOGS',
 };
 

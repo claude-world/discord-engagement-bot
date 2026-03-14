@@ -4,6 +4,7 @@ import { postToChannel, logToBot } from './poster.js';
 import { buildDailyTipPrompt, DAILY_TIP_FALLBACKS } from './prompts/daily-tip.js';
 import { buildDiscussionPrompt, DISCUSSION_FALLBACKS } from './prompts/discussion.js';
 import { buildWeeklyRoundupPrompt } from './prompts/weekly-roundup.js';
+import { checkVersion } from './version-checker.js';
 
 export interface ScheduleJob {
   id: string;
@@ -20,6 +21,7 @@ const DEFAULT_SCHEDULE: ScheduleJob[] = [
   { id: 'coworkRemind', name: 'Cowork 提醒', cron: '0 20 * * 3', channel: 'general', enabled: true, type: 'other' },
   { id: 'weeklyRoundup', name: '週五週報', cron: '0 18 * * 5', channel: 'announcements', enabled: true, type: 'roundup' },
   { id: 'weekendChallenge', name: '週末挑戰', cron: '0 9 * * 6', channel: 'daily-tips', enabled: true, type: 'other' },
+  { id: 'versionCheck', name: '版本檢查', cron: '0 */4 * * *', channel: 'news', enabled: true, type: 'other' },
 ];
 
 const activeTasks = new Map<string, cron.ScheduledTask>();
@@ -41,6 +43,7 @@ const GENERATORS: Record<string, ContentGenerator> = {
 
 明天見！`,
   weeklyRoundup: () => generateContent(buildWeeklyRoundupPrompt()),
+  versionCheck: async () => { await checkVersion(); return ''; },
   weekendChallenge: async () => `**週末挑戰** 🏆
 
 這週末試試看：
@@ -68,6 +71,7 @@ async function executeJob(job: ScheduleJob): Promise<void> {
     }
 
     const content = await generator();
+    if (!content) return; // Some jobs handle posting internally (e.g., versionCheck)
     await postToChannel(job.channel, content, { type: job.type, source: 'scheduled' });
     await logToBot(`✅ ${job.name} → #${job.channel}`);
   } catch (err) {
