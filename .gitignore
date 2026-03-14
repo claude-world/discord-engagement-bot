@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.app
+*.dmg
+out/
+.playwright-mcp/
+data/

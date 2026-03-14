@@ -1,0 +1,26 @@
+appId: com.claudeworld.bot
+productName: Claude World Bot
+directories:
+  output: out
+  buildResources: assets
+files:
+  - dist/**/*
+  - ui/dist/**/*
+  - assets/**/*
+  - "!node_modules/**/{test,__tests__,tests}/**"
+  - "!node_modules/**/*.{md,ts,map}"
+mac:
+  category: public.app-category.developer-tools
+  target: dmg
+  icon: assets/icon.png
+dmg:
+  title: Claude World Bot
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+extraMetadata:
+  main: dist/electron/main.js
