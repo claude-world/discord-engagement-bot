@@ -1,9 +1,11 @@
-import { SYSTEM_CONTEXT, getTodayTopic } from './context.js';
+import { SYSTEM_CONTEXT, getTodayTopic, getKnowledgeInstructions } from './context.js';
 
 export function buildDiscussionPrompt(): string {
   const topic = getTodayTopic();
+  const knowledge = getKnowledgeInstructions(topic.knowledgeKeys);
 
   return `${SYSTEM_CONTEXT}
+${knowledge}
 
 任務：寫一則「午間討論」貼文，引導社群成員互動。
 
@@ -27,45 +29,51 @@ export function buildDiscussionPrompt(): string {
 - 最好是有「選擇」的問題（A 還是 B？）或「分享經驗」的問題
 - 先給一個示範回答降低門檻
 - 語氣輕鬆，像朋友聊天
+- 可以引用知識檔案中的具體功能來設計問題
 - 長度 100-200 字
 - 不要太嚴肅或學術`;
 }
 
 export const DISCUSSION_FALLBACKS = [
-  `**午間討論：你的 Claude Code 日常是什麼？**
+  `**午間討論：你怎麼組織 .claude/ 目錄？**
 
-好奇大家每天用 Claude Code 做什麼？
+隨著 commands、agents、skills 越來越多，\`.claude/\` 目錄也越來越複雜。
 
-是主要拿來寫新功能、修 bug、還是 code review？大概一天花多少時間在上面？
+你的組織方式是？
 
-> 我自己大概 70% 寫新功能、20% debug、10% 重構。平均一天跟 Claude 對話 3-4 小時。
+A) 全部平放，檔名就是用途
+B) 按功能分子目錄（dev/、ops/、review/）
+C) 只用全域的 \`~/.claude/\`
+D) 還沒想這麼多...
 
-來分享你的使用比例！`,
+> 我自己是 B，按 workflow 分目錄。全域放通用的，專案放專案特定的。最近在試 rules/ 拆分條件式規則。
 
-  `**午間討論：Terminal 還是 IDE？**
+你呢？`,
 
-用 Claude Code 的時候，你偏好在哪裡操作？
+  `**午間討論：Opus、Sonnet 還是 Haiku？**
 
-A) 純 Terminal（iTerm / Warp / 內建）
-B) VS Code 內建 Terminal
-C) JetBrains Terminal
-D) 其他
+Claude Code 現在有三個模型可以切換。你的使用比例大概是？
 
-> 我自己是用 iTerm + tmux，一個 pane 跑 Claude，旁邊開 VS Code 看程式碼。
+- **Opus 4.6** — 最強推理，但最慢最貴
+- **Sonnet 4.6** — 平衡速度和能力
+- **Haiku 4.5** — 快 2 倍，便宜 3 倍
 
-你的 setup 是什麼？`,
+> 我自己大概 Sonnet 70%、Haiku 20%、Opus 10%。Haiku 拿來做探索和簡單任務，Opus 只在設計架構時用。
+
+你的比例是？有什麼切換心得？`,
 
   `**午間討論：最推薦的 MCP Server？**
 
 如果只能推薦一個 MCP server 給新手，你會推哪個？
 
-幾個常見的選項：
-- filesystem - 檔案操作
-- sequential-thinking - 思考輔助
-- browser - 網頁操作
-- 自己寫的 custom server
+幾個熱門選項：
+- **filesystem** — 跨目錄檔案操作
+- **memory** — 知識圖譜記憶
+- **sequential-thinking** — 結構化思考
+- **postgres** — 直接操作資料庫
+- 自建的 custom server
 
-> 我會推 filesystem，因為幾乎每個專案都用得到，設定也最簡單。
+> 我會推 sequential-thinking，因為它讓 Claude 的推理品質明顯提升，而且設定超簡單。
 
 你的答案是？`,
 ];

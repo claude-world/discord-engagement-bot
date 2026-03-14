@@ -1,9 +1,11 @@
-import { SYSTEM_CONTEXT, getTodayTopic } from './context.js';
+import { SYSTEM_CONTEXT, getTodayTopic, getKnowledgeInstructions } from './context.js';
 
 export function buildDailyTipPrompt(): string {
   const topic = getTodayTopic();
+  const knowledge = getKnowledgeInstructions(topic.knowledgeKeys);
 
   return `${SYSTEM_CONTEXT}
+${knowledge}
 
 任務：寫一則「每日技巧」貼文。
 
@@ -29,10 +31,11 @@ export function buildDailyTipPrompt(): string {
 
 要求：
 - 標題用 **粗體**
-- 技巧要具體可操作，不是空泛建議
-- 如果有程式碼範例，用 \`\`\` 包起來
+- 技巧要具體可操作，引用真實的指令、設定格式、CLI flags
+- 如果有程式碼範例，用 \`\`\` 包起來，確保語法正確
 - 結尾討論問題要容易回答
-- 總長度 150-300 字`;
+- 總長度 150-300 字
+- 不要重複太基礎的入門知識，目標是進階使用者`;
 }
 
 /**
@@ -41,80 +44,87 @@ export function buildDailyTipPrompt(): string {
 export const DAILY_TIP_FALLBACKS = [
   `**每日技巧：三個讓 CLAUDE.md 更有效的寫法**
 
-1. **明確角色定義** - 在最上方寫清楚「你是 X 專案的 Y 角色」，Claude 會更精準地回應
+1. **條件式規則** - 把不同情境的規則放在 \`.claude/rules/\` 下，用 \`paths:\` 限定觸發範圍
 \`\`\`markdown
-# CLAUDE.md
-你是 MyApp 的資深後端工程師，熟悉 TypeScript + PostgreSQL
+---
+paths: src/api/**
+---
+API 路由必須有 input validation 和 error handling
 \`\`\`
 
-2. **加入專案慣例** - 列出命名規則、檔案結構、測試要求，減少來回溝通
+2. **動態內容注入** - 用 \`!\` 前綴執行 shell 命令，結果會注入 context
 \`\`\`markdown
-## 慣例
-- 函式名稱用 camelCase
-- 每個 PR 至少一個測試
+目前分支：\`!git branch --show-current\`
 \`\`\`
 
-3. **用 rules/ 拆分** - 把不同情境的規則放在 \`.claude/rules/\` 下，用 \`paths:\` 限定觸發範圍
+3. **精簡至上** - 超過 200 行效果會下降，用 rules/ 分離關注點
 
-💬 你的 CLAUDE.md 有多長？都放了什麼？`,
+💬 你的 CLAUDE.md 有用到 rules/ 拆分嗎？效果如何？`,
 
-  `**每日技巧：MCP Server 快速上手**
+  `**每日技巧：MCP Server 進階設定**
 
-1. **用 stdio transport** - 最簡單的連接方式，直接跑本地指令
+1. **環境變數支援** - 在 \`.mcp.json\` 中用 \`\${VAR}\` 引用環境變數
 \`\`\`json
 {
   "mcpServers": {
-    "my-tool": {
+    "db": {
       "command": "npx",
-      "args": ["my-mcp-server"]
+      "args": ["-y", "@anthropic/mcp-postgres"],
+      "env": { "DATABASE_URL": "\${DATABASE_URL}" }
     }
   }
 }
 \`\`\`
 
-2. **善用 resources** - 讓 Claude 讀取外部資料（DB、API、檔案系統）
-3. **一個 server 一個功能** - 不要把所有工具塞在同一個 server
+2. **分層設定** - 全域放 \`~/.claude/settings.json\`，專案放 \`.mcp.json\`
+3. **除錯** - 用 \`/mcp\` 指令檢查連接狀態，stderr 重導到 log 檔
 
 💬 你目前用了哪些 MCP server？推薦一下！`,
 
-  `**每日技巧：Claude Code 除錯三步驟**
+  `**每日技巧：Hooks 安全防護三招**
 
-1. **先看錯誤訊息** - 用 \`/diagnose\` 讓 Claude 分析完整的 error stack
-2. **縮小範圍** - 如果問題在測試，先跑單一測試檔 \`npx vitest run path/to/test.ts\`
-3. **給 Claude 上下文** - 把相關檔案路徑告訴它，不要讓它猜
-
-\`\`\`bash
-# 好的提問方式
-claude "src/api/users.ts 的 getUser 函式回傳 null，但 DB 有資料，幫我查"
-\`\`\`
-
-💬 你遇過最難 debug 的 Claude Code 問題是什麼？`,
-
-  `**每日技巧：善用 Agent 模式提升效率**
-
-1. **讓 Agent 自己跑** - 用 \`--allowedTools\` 指定允許的工具，然後放手
-\`\`\`bash
-claude --allowedTools "Read,Write,Edit,Bash" "重構 src/utils/ 下所有 helper functions"
-\`\`\`
-
-2. **Agent Teams** - 多個 Agent 協作，各自獨立 context window，互不干擾
-3. **設好 hooks** - PreToolUse hook 可以在 Agent 執行危險操作前攔截
-
-💬 你試過讓 Claude Code Agent 自主完成什麼任務？`,
-
-  `**每日技巧：Git Workflow 加速術**
-
-1. **用 /commit** - 讓 Claude 分析 diff 自動寫 commit message
-2. **自動 PR** - \`/commit-push-pr\` 一鍵完成 commit → push → create PR
-3. **Pre-commit hooks** - 在 \`.claude/settings.json\` 設定 hooks，自動 lint + format
-
+1. **攔截危險寫入** - 用 PreToolUse hook 防止修改 migrations
 \`\`\`json
 {
   "hooks": {
-    "PreCommit": [{ "command": "npm run lint" }]
+    "PreToolUse": [{
+      "matcher": "Write|Edit",
+      "hooks": [{ "type": "command", "command": "node .claude/hooks/guard.js" }]
+    }]
   }
 }
 \`\`\`
 
-💬 你的 Git workflow 有哪些自動化？分享一下！`,
+2. **自動格式化** - PostToolUse hook 在每次寫入後跑 prettier
+3. **Session 摘要** - SessionEnd hook 自動記錄本次工作內容
+
+💬 你有設定 hooks 嗎？用來做什麼？`,
+
+  `**每日技巧：Agent 開發三要點**
+
+1. **描述要有 examples** - 在 description 中加 \`<example>\` 區塊，Claude 才知道何時觸發
+2. **限制工具** - 用 \`tools:\` 欄位限制 agent 可用的工具，避免越權
+\`\`\`yaml
+---
+name: code-reviewer
+model: sonnet
+tools: ["Read", "Grep", "Glob"]
+---
+\`\`\`
+
+3. **選對模型** - 簡單任務用 haiku（快 2x），複雜分析用 opus
+
+💬 你有自建 agent 嗎？做什麼用途？`,
+
+  `**每日技巧：工作流程加速術**
+
+1. **\`/loop\` 持續監控** - 定時執行指令，不需手動重複
+\`\`\`
+/loop 5m 檢查 CI 狀態並報告
+\`\`\`
+
+2. **Worktree 隔離** - \`claude --worktree\` 在獨立分支工作，不影響主分支
+3. **模型策略** - 探索用 haiku，開發用 sonnet，架構設計用 opus
+
+💬 你的 Claude Code 工作流程有哪些自動化？`,
 ];
