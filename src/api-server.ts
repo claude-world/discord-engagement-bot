@@ -8,6 +8,7 @@ import { parseCommand, executeCommand } from './commander.js';
 import { getSchedule, updateJob, triggerJob } from './scheduler.js';
 import { getRecords, getTodayCount, getLastRecord } from './history.js';
 import { getChannelNames } from './config.js';
+import { getRecentChats, getPopularTopics, getActiveUsers } from './chat-logger.js';
 
 const PORT = 3456;
 
@@ -89,6 +90,21 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     // GET /api/channels
     if (url === '/api/channels' && method === 'GET') {
       return json(res, getChannelNames());
+    }
+
+    // GET /api/chat/recent
+    if (url === '/api/chat/recent' && method === 'GET') {
+      return json(res, getRecentChats(50));
+    }
+
+    // GET /api/chat/topics
+    if (url === '/api/chat/topics' && method === 'GET') {
+      return json(res, getPopularTopics(10));
+    }
+
+    // GET /api/chat/users
+    if (url === '/api/chat/users' && method === 'GET') {
+      return json(res, getActiveUsers(20));
     }
 
     json(res, { error: 'Not found' }, 404);

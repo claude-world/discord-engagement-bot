@@ -5,6 +5,7 @@
   "main": "dist/electron/main.js",
   "scripts": {
     "dev": "tsx src/index.ts",
+    "backfill": "tsx src/backfill.ts",
     "dev:ui": "vite ui",
     "build": "tsc && vite build ui",
     "electron:dev": "concurrently \"vite ui\" \"tsc -w\" \"electron .\"",

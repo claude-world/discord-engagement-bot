@@ -1,5 +1,6 @@
-import { Client, GatewayIntentBits, TextChannel } from 'discord.js';
+import { Client, GatewayIntentBits, TextChannel, Events } from 'discord.js';
 import { getConfig } from './config.js';
+import { logMessage, logReaction } from './chat-logger.js';
 
 let client: Client | null = null;
 
@@ -16,7 +17,12 @@ export async function initBot(): Promise<Client> {
   const config = getConfig();
 
   client = new Client({
-    intents: [GatewayIntentBits.Guilds],
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent,
+      GatewayIntentBits.GuildMessageReactions,
+    ],
   });
 
   return new Promise((resolve, reject) => {
@@ -28,6 +34,24 @@ export async function initBot(): Promise<Client> {
       clearTimeout(timeout);
       console.log(`[bot] Logged in as ${c.user.tag}`);
       resolve(client!);
+    });
+
+    // Log all messages
+    client!.on(Events.MessageCreate, (msg) => {
+      try {
+        logMessage(msg);
+      } catch (err) {
+        // Silent — logging should never crash the bot
+      }
+    });
+
+    // Log reactions
+    client!.on(Events.MessageReactionAdd, (reaction, user) => {
+      try {
+        if (!user.bot) {
+          logReaction(user.id, reaction.emoji.name ?? '?');
+        }
+      } catch {}
     });
 
     client!.on('error', (err) => {

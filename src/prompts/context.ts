@@ -5,6 +5,7 @@
  * Integrates MCP tools (trend-pulse, cf-browser) for real-time data.
  */
 import { resolve } from 'path';
+import { getChatSummary } from '../chat-logger.js';
 
 const KNOWLEDGE_DIR = resolve(process.cwd(), 'knowledge');
 
@@ -79,7 +80,9 @@ export function getKnowledgeInstructions(keys: string[]): string {
 重要：先讀取以下知識檔案，確保內容的準確性和專業度：
 ${files.map(f => `- ${f}`).join('\n')}
 
-用這些檔案中的具體功能、指令、設定格式來寫內容。不要虛構不存在的功能。`;
+用這些檔案中的具體功能、指令、設定格式來寫內容。不要虛構不存在的功能。
+
+${getChatSummary()}`;
 }
 
 /**
