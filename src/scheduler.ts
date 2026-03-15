@@ -26,6 +26,7 @@ const DEFAULT_SCHEDULE: ScheduleJob[] = [
 
 const activeTasks = new Map<string, cron.ScheduledTask>();
 let scheduleConfig: ScheduleJob[] = [...DEFAULT_SCHEDULE];
+let schedulerStarted = false;
 
 type ContentGenerator = () => Promise<string>;
 
@@ -82,6 +83,7 @@ async function executeJob(job: ScheduleJob): Promise<void> {
 }
 
 export function startScheduler(): void {
+  schedulerStarted = true;
   stopScheduler(); // Clear existing
 
   for (const job of scheduleConfig) {
@@ -110,13 +112,31 @@ export function stopScheduler(): void {
   activeTasks.clear();
 }
 
-export function getSchedule(): ScheduleJob[] {
+export interface ScheduleJobStatus extends ScheduleJob {
+  running: boolean;
+}
+
+/**
+ * Get schedule with runtime status (running = cron task is active).
+ */
+export function getSchedule(): ScheduleJobStatus[] {
   return scheduleConfig.map(job => ({
     ...job,
-    enabled: job.enabled && activeTasks.has(job.id),
+    running: activeTasks.has(job.id),
   }));
 }
 
+/**
+ * Get raw schedule config (offline-safe, no runtime state).
+ */
+export function getScheduleConfig(): ScheduleJob[] {
+  return scheduleConfig.map(job => ({ ...job }));
+}
+
+/**
+ * Update a job's config. Does NOT restart the scheduler —
+ * callers in a live server context should call startScheduler() after.
+ */
 export function updateJob(id: string, updates: Partial<Pick<ScheduleJob, 'cron' | 'channel' | 'enabled'>>): ScheduleJob | null {
   const job = scheduleConfig.find(j => j.id === id);
   if (!job) return null;
@@ -125,9 +145,12 @@ export function updateJob(id: string, updates: Partial<Pick<ScheduleJob, 'cron' 
   if (updates.channel !== undefined) job.channel = updates.channel;
   if (updates.enabled !== undefined) job.enabled = updates.enabled;
 
-  // Restart scheduler to apply changes
-  startScheduler();
-  return job;
+  // Restart scheduler only in live server context (startScheduler was called)
+  if (schedulerStarted) {
+    startScheduler();
+  }
+
+  return { ...job };
 }
 
 /**
