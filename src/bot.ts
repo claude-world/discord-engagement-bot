@@ -1,6 +1,9 @@
-import { Client, GatewayIntentBits, TextChannel, Events } from 'discord.js';
+import { Client, GatewayIntentBits, TextChannel, Events, Partials } from 'discord.js';
 import { getConfig } from './config.js';
 import { logMessage, logReaction } from './chat-logger.js';
+import { handleMemberJoin } from './welcome.js';
+import { handleEngagement } from './engagement.js';
+import { handleAutoClassify, handlePinReaction } from './knowledge-engine.js';
 
 let client: Client | null = null;
 
@@ -19,9 +22,14 @@ export async function initBot(): Promise<Client> {
   client = new Client({
     intents: [
       GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMembers,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.GuildMessageReactions,
+    ],
+    partials: [
+      Partials.Message,
+      Partials.Reaction,
     ],
   });
 
@@ -36,22 +44,31 @@ export async function initBot(): Promise<Client> {
       resolve(client!);
     });
 
-    // Log all messages
-    client!.on(Events.MessageCreate, (msg) => {
-      try {
-        logMessage(msg);
-      } catch (err) {
-        // Silent — logging should never crash the bot
-      }
+    // New member welcome
+    client!.on(Events.GuildMemberAdd, (member) => {
+      handleMemberJoin(member).catch(err =>
+        console.error('[bot] Welcome error:', err.message)
+      );
     });
 
-    // Log reactions
+    // Message handling: log + engagement + auto-classify
+    client!.on(Events.MessageCreate, (msg) => {
+      try { logMessage(msg); } catch {}
+
+      // Don't process bot messages for engagement
+      if (msg.author.bot) return;
+
+      handleEngagement(msg).catch(() => {});
+      handleAutoClassify(msg).catch(() => {});
+    });
+
+    // Reaction handling: log + pin collection
     client!.on(Events.MessageReactionAdd, (reaction, user) => {
-      try {
-        if (!user.bot) {
-          logReaction(user.id, reaction.emoji.name ?? '?');
-        }
-      } catch {}
+      if (user.bot) return;
+
+      try { logReaction(user.id, reaction.emoji.name ?? '?'); } catch {}
+
+      handlePinReaction(reaction, user).catch(() => {});
     });
 
     client!.on('error', (err) => {

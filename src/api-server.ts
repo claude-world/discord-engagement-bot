@@ -9,6 +9,7 @@ import { getSchedule, updateJob, triggerJob } from './scheduler.js';
 import { getRecords, getTodayCount, getLastRecord } from './history.js';
 import { getChannelNames } from './config.js';
 import { getRecentChats, getPopularTopics, getActiveUsers } from './chat-logger.js';
+import { getPinnedEntries } from './knowledge-engine.js';
 
 const PORT = 3456;
 const MAX_BODY = 64 * 1024; // 64 KB
@@ -115,6 +116,11 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
     // GET /api/chat/users
     if (url === '/api/chat/users' && method === 'GET') {
       return json(res, getActiveUsers(20));
+    }
+
+    // GET /api/knowledge/pins
+    if (url === '/api/knowledge/pins' && method === 'GET') {
+      return json(res, getPinnedEntries());
     }
 
     json(res, { error: 'Not found' }, 404);
