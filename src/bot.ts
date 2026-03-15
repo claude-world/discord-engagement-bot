@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, TextChannel, Events, Partials } from 'discord.js';
+import { Client, GatewayIntentBits, TextChannel, Events, Partials, MessageType } from 'discord.js';
 import { getConfig } from './config.js';
 import { logMessage, logReaction } from './chat-logger.js';
 import { handleMemberJoin } from './welcome.js';
@@ -53,6 +53,9 @@ export async function initBot(): Promise<Client> {
 
     // Message handling: log + engagement + auto-classify
     client!.on(Events.MessageCreate, (msg) => {
+      // Ignore system messages (member join, boost, pin, etc.) — they aren't real user messages
+      if (msg.type !== MessageType.Default && msg.type !== MessageType.Reply) return;
+
       try { logMessage(msg); } catch {}
 
       // Don't process bot messages for engagement

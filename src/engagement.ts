@@ -9,6 +9,7 @@ import { Message, TextChannel } from 'discord.js';
 import { getUserProfile, getActiveUsers } from './chat-logger.js';
 import { getTextChannel } from './bot.js';
 import { getChannelId } from './config.js';
+import { wasRecentlyWelcomed } from './welcome.js';
 
 // Cooldown: don't spam topic mentions (per topic, 1 hour)
 const topicMentionCooldown = new Map<string, number>();
@@ -98,9 +99,9 @@ export function checkAchievements(userId: string, isReply: boolean): string | nu
     const key = `${userId}:${id}`;
     if (announcedAchievements.has(key)) continue;
 
-    // Skip "first_message" if user already has history from backfill
-    // (messageCount jumps from backfill data, not truly first message)
-    if (id === 'first_message' && stats.messageCount > 2) continue;
+    // Skip "first_message" for backfilled users or recently welcomed members
+    // (welcome message already greets them — no need to double-notify)
+    if (id === 'first_message' && (stats.messageCount > 2 || wasRecentlyWelcomed(userId))) continue;
 
     announcedAchievements.add(key);
     return achievement.name;

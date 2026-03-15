@@ -11,6 +11,15 @@ import { getPopularTopics } from './chat-logger.js';
 
 const WELCOME_CHANNEL = 'general';
 
+// Track recently welcomed members to suppress duplicate first-message achievement.
+// Note: in-memory only — a bot restart within the TTL window may allow the achievement through.
+const recentlyWelcomed = new Set<string>();
+const WELCOME_SUPPRESS_TTL_MS = 5 * 60 * 1000; // 5 min
+
+export function wasRecentlyWelcomed(userId: string): boolean {
+  return recentlyWelcomed.has(userId);
+}
+
 /**
  * Handle new member join.
  */
@@ -18,6 +27,10 @@ export async function handleMemberJoin(member: GuildMember): Promise<void> {
   if (member.user.bot) return;
 
   console.log(`[welcome] New member: ${member.displayName}`);
+
+  // Set BEFORE awaited sends so the guard is active even if channel/DM send fails
+  recentlyWelcomed.add(member.id);
+  setTimeout(() => recentlyWelcomed.delete(member.id), WELCOME_SUPPRESS_TTL_MS);
 
   // 1. Public welcome in #general
   try {
