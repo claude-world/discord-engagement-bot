@@ -112,8 +112,9 @@ export function useSchedule() {
   return { schedule, refresh, updateJob, triggerJob };
 }
 
-export function useHistory(opts?: any) {
+export function useHistory(opts?: { type?: string; channel?: string }) {
   const [records, setRecords] = useState<any[]>([]);
+  const optsKey = JSON.stringify(opts ?? {});
 
   const refresh = useCallback(async () => {
     try {
@@ -122,7 +123,7 @@ export function useHistory(opts?: any) {
     } catch (err) {
       console.error('Failed to get history:', err);
     }
-  }, []);
+  }, [optsKey]);
 
   useEffect(() => { refresh(); }, [refresh]);
 

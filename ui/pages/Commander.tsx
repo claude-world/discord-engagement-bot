@@ -13,22 +13,15 @@ export default function Commander() {
   const { loading, preview, parse, execute, setPreview } = useCommander();
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleSubmit = async (andSend = false) => {
+  const handleGenerate = async () => {
     if (!input.trim()) return;
     await parse(input.trim());
-    if (andSend && preview) {
-      await execute();
-    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       e.preventDefault();
-      handleSubmit(false);
-    }
-    if (e.key === 'Enter' && e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(true);
+      handleGenerate();
     }
   };
 
@@ -41,8 +34,9 @@ export default function Commander() {
         {QUICK_COMMANDS.map((cmd) => (
           <button
             key={cmd.value}
+            disabled={loading}
             onClick={() => { setInput(cmd.value); parse(cmd.value); }}
-            className="bg-gray-800 hover:bg-gray-700 text-sm px-3 py-1.5 rounded-lg transition-colors"
+            className="bg-gray-800 hover:bg-gray-700 disabled:opacity-50 text-sm px-3 py-1.5 rounded-lg transition-colors"
           >
             {cmd.label}
           </button>
@@ -59,20 +53,19 @@ export default function Commander() {
           placeholder="輸入指令... 例如：發一篇關於 MCP 設定的進階技巧"
           className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-base resize-none focus:outline-none focus:border-indigo-500 min-h-[80px]"
           rows={3}
+          disabled={loading}
         />
         <div className="flex justify-between items-center mt-3">
           <div className="text-xs text-gray-500">
-            Cmd+Enter 生成 | Shift+Enter 生成+發送
+            Cmd+Enter 生成預覽
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleSubmit(false)}
-              disabled={loading || !input.trim()}
-              className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm px-4 py-2 rounded-lg transition-colors"
-            >
-              {loading ? '生成中...' : '生成預覽'}
-            </button>
-          </div>
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !input.trim()}
+            className="bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-700 disabled:text-gray-500 text-white text-sm px-4 py-2 rounded-lg transition-colors"
+          >
+            {loading ? '生成中...' : '生成預覽'}
+          </button>
         </div>
       </div>
 

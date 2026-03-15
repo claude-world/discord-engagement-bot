@@ -1,68 +1,49 @@
-import React, { useState } from 'react';
+import React from 'react';
+import { useStatus } from '../hooks/useIPC';
 
 export default function Settings() {
-  const [saved, setSaved] = useState(false);
-
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+  const { status } = useStatus();
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">設定</h1>
 
-      {/* Token */}
+      {/* Bot Status */}
       <div className="bg-gray-800 rounded-xl p-4 space-y-3">
-        <h2 className="text-lg font-semibold">Discord Bot Token</h2>
-        <input
-          type="password"
-          placeholder="Bot token (from .env)"
-          className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
-          disabled
-        />
-        <p className="text-xs text-gray-500">
-          Token 從 .env 檔案載入，不在 UI 中修改
-        </p>
+        <h2 className="text-lg font-semibold">Bot 狀態</h2>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="text-gray-400">連線狀態</div>
+          <div className={status?.connected ? 'text-green-400' : 'text-red-400'}>
+            {status?.connected ? '已連線' : '離線'}
+          </div>
+          <div className="text-gray-400">今日發送</div>
+          <div>{status?.todayCount ?? 0} 則</div>
+          <div className="text-gray-400">排程數量</div>
+          <div>{status?.schedule?.length ?? 0} 個</div>
+        </div>
       </div>
 
-      {/* Channel IDs */}
+      {/* Config (read-only from .env) */}
       <div className="bg-gray-800 rounded-xl p-4 space-y-3">
         <h2 className="text-lg font-semibold">頻道設定</h2>
-        {['daily-tips', 'general', 'announcements', 'bot-logs'].map((ch) => (
+        {['daily-tips', 'general', 'announcements', 'news', 'showcase', 'bot-logs'].map((ch) => (
           <div key={ch} className="flex items-center gap-3">
             <label className="text-sm text-gray-400 w-32">#{ch}</label>
-            <input
-              type="text"
-              placeholder="Channel ID"
-              className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
-              disabled
-            />
+            <span className="text-sm text-gray-500">從 .env 載入</span>
           </div>
         ))}
-        <p className="text-xs text-gray-500">
-          頻道 ID 從 .env 檔案載入
-        </p>
       </div>
 
-      {/* CLI Config */}
+      {/* Content Engine */}
       <div className="bg-gray-800 rounded-xl p-4 space-y-3">
-        <h2 className="text-lg font-semibold">內容生成</h2>
-        <div className="flex items-center gap-3">
-          <label className="text-sm text-gray-400 w-32">CLI 路徑</label>
-          <input
-            type="text"
-            defaultValue="claude"
-            className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <label className="text-sm text-gray-400 w-32">逾時 (ms)</label>
-          <input
-            type="number"
-            defaultValue="60000"
-            className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
-          />
+        <h2 className="text-lg font-semibold">內容引擎</h2>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="text-gray-400">CLI</div>
+          <div><code className="text-gray-300">claude -p</code></div>
+          <div className="text-gray-400">MCP</div>
+          <div>trend-pulse + cf-browser</div>
+          <div className="text-gray-400">知識庫</div>
+          <div>12 個檔案（按主題載入）</div>
         </div>
       </div>
 
@@ -72,18 +53,16 @@ export default function Settings() {
         <div className="text-sm text-gray-400 space-y-1">
           <div>Discord Engagement Bot v1.0.0</div>
           <div>Claude World Taiwan</div>
-          <div className="text-xs text-gray-500">
-            內容引擎: claude -p (本地 CLI, 零外部費用)
-          </div>
+          <a
+            href="https://github.com/claude-world/discord-engagement-bot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-indigo-400 hover:text-indigo-300"
+          >
+            github.com/claude-world/discord-engagement-bot
+          </a>
         </div>
       </div>
-
-      <button
-        onClick={handleSave}
-        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg transition-colors"
-      >
-        {saved ? '已儲存' : '儲存設定'}
-      </button>
     </div>
   );
 }
