@@ -104,7 +104,7 @@ export function startScheduler(): void {
 }
 
 export function stopScheduler(): void {
-  for (const [id, task] of activeTasks) {
+  for (const task of activeTasks.values()) {
     task.stop();
   }
   activeTasks.clear();
@@ -128,19 +128,6 @@ export function updateJob(id: string, updates: Partial<Pick<ScheduleJob, 'cron' 
   // Restart scheduler to apply changes
   startScheduler();
   return job;
-}
-
-export function getNextRun(job: ScheduleJob): Date | null {
-  // Simple next-run calculation using node-cron's validate
-  // For display purposes only
-  try {
-    const interval = cron.schedule(job.cron, () => {}, { timezone: 'Asia/Taipei' });
-    interval.stop();
-    // node-cron doesn't expose next run time directly, return null for now
-    return null;
-  } catch {
-    return null;
-  }
 }
 
 /**

@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { resolve, dirname } from 'path';
 
 export interface PostRecord {
   id: string;
@@ -31,8 +31,6 @@ function loadRecords(): PostRecord[] {
 }
 
 function saveRecords(): void {
-  const { mkdirSync } = require('fs');
-  const { dirname } = require('path');
   mkdirSync(dirname(HISTORY_FILE), { recursive: true });
   writeFileSync(HISTORY_FILE, JSON.stringify(records, null, 2));
 }

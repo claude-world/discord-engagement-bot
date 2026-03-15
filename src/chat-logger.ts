@@ -76,9 +76,16 @@ function loadUsers(): Record<string, UserProfile> {
   return users;
 }
 
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
 function saveUsers(): void {
-  ensureDir();
-  writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  // Debounce writes to avoid blocking I/O on every message
+  if (saveTimer) return;
+  saveTimer = setTimeout(() => {
+    ensureDir();
+    writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+    saveTimer = null;
+  }, 5000);
 }
 
 function detectTopics(content: string): string[] {

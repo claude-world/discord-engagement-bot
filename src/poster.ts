@@ -1,6 +1,6 @@
 import { TextChannel } from 'discord.js';
 import { getTextChannel } from './bot.js';
-import { getChannelId } from './config.js';
+import { getChannelId, getConfig } from './config.js';
 import { addRecord } from './history.js';
 
 const DISCORD_LIMIT = 2000;
@@ -78,7 +78,8 @@ export async function postToChannel(
  */
 export async function logToBot(message: string): Promise<void> {
   try {
-    const channelId = getChannelId('bot-logs');
+    const config = getConfig();
+    const channelId = config.CHANNEL_BOT_LOGS;
     if (!channelId) return;
     const channel = await getTextChannel(channelId);
     const timestamp = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });

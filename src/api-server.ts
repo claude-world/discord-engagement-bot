@@ -11,9 +11,10 @@ import { getChannelNames } from './config.js';
 import { getRecentChats, getPopularTopics, getActiveUsers } from './chat-logger.js';
 
 const PORT = 3456;
+const MAX_BODY = 64 * 1024; // 64 KB
 
 function cors(res: ServerResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5174');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
@@ -26,8 +27,17 @@ function json(res: ServerResponse, data: unknown, status = 200) {
 
 async function readBody(req: IncomingMessage): Promise<any> {
   const chunks: Buffer[] = [];
-  for await (const chunk of req) chunks.push(chunk as Buffer);
-  return JSON.parse(Buffer.concat(chunks).toString());
+  let size = 0;
+  for await (const chunk of req) {
+    size += (chunk as Buffer).length;
+    if (size > MAX_BODY) throw new Error('Request body too large');
+    chunks.push(chunk as Buffer);
+  }
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString());
+  } catch {
+    throw new Error('Invalid JSON body');
+  }
 }
 
 async function handleRequest(req: IncomingMessage, res: ServerResponse) {
@@ -116,7 +126,7 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
 
 export function startApiServer(): void {
   const server = createServer(handleRequest);
-  server.listen(PORT, () => {
+  server.listen(PORT, '127.0.0.1', () => {
     console.log(`[api] HTTP API running at http://localhost:${PORT}`);
   });
 }
