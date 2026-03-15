@@ -13,6 +13,7 @@ const ConfigSchema = z.object({
   CHANNEL_NEWS: z.string().default(''),
   CHANNEL_SHOWCASE: z.string().default(''),
   CHANNEL_BOT_LOGS: z.string().default(''),
+  CHANNEL_SHARE_YOUR_PROJECT: z.string().default(''),
   CLAUDE_CLI_PATH: z.string().default('claude'),
   CONTENT_TIMEOUT: z.string().default('60000').transform(Number).pipe(z.number().int().min(5000).max(300000)),
 });
@@ -41,6 +42,7 @@ const CHANNEL_MAP: Record<string, keyof Config> = {
   'news': 'CHANNEL_NEWS',
   'showcase': 'CHANNEL_SHOWCASE',
   'bot-logs': 'CHANNEL_BOT_LOGS',
+  'share-your-project': 'CHANNEL_SHARE_YOUR_PROJECT',
 };
 
 export function getChannelId(name: string): string {

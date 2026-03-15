@@ -33,6 +33,9 @@ async function main() {
       enabled: { type: 'string' },
       cron: { type: 'string' },
       channel: { type: 'string' },
+      tag: { type: 'string', multiple: true },
+      title: { type: 'string' },
+      body: { type: 'string' },
     },
     allowPositionals: true,
     strict: false,
@@ -45,7 +48,7 @@ async function main() {
   }
 
   // Detect unknown flags (strict:false lets them through silently)
-  const KNOWN_FLAGS = new Set(['json', 'help', 'limit', 'type', 'yes', 'preview', 'enabled', 'cron', 'channel']);
+  const KNOWN_FLAGS = new Set(['json', 'help', 'limit', 'type', 'yes', 'preview', 'enabled', 'cron', 'channel', 'tag', 'title', 'body']);
   for (const key of Object.keys(globalFlags)) {
     if (!KNOWN_FLAGS.has(key)) {
       console.error(`Unknown flag: --${key}`);
@@ -146,6 +149,23 @@ async function main() {
       case 'pins': {
         const { runPins } = await import('./cli/commands/pins.js');
         runPins(fmt);
+        break;
+      }
+
+      case 'forum': {
+        const sub = positionals[1];
+        const { runForumPost, runForumTags } = await import('./cli/commands/forum.js');
+
+        if (sub === 'tags') {
+          await runForumTags(fmt, positionals[2] ?? '');
+        } else {
+          // forum <channel> --title "..." --body "..."  OR  forum <channel> <title> <body>
+          const channel = sub ?? '';
+          const title = (globalFlags.title as string) ?? positionals[2] ?? '';
+          const body = (globalFlags.body as string) ?? positionals.slice(3).join(' ');
+          const tags = (globalFlags.tag as string[] | undefined) ?? [];
+          await runForumPost(fmt, channel, title, body, tags, globalFlags.yes === true);
+        }
         break;
       }
 

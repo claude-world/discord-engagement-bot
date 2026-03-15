@@ -1,5 +1,5 @@
-import { TextChannel } from 'discord.js';
-import { getTextChannel } from './bot.js';
+import { TextChannel, ForumChannel } from 'discord.js';
+import { getTextChannel, getForumChannel } from './bot.js';
 import { getChannelId, getConfig } from './config.js';
 import { addRecord } from './history.js';
 
@@ -71,6 +71,66 @@ export async function postToChannel(
     contentLength: content.length,
     chunks: chunks.length,
   };
+}
+
+export interface ForumPostResult {
+  threadId: string;
+  messageId: string;
+  channel: string;
+  threadName: string;
+}
+
+/**
+ * Create a forum post (thread) in a forum channel.
+ */
+export async function postToForum(
+  channelName: string,
+  title: string,
+  content: string,
+  opts?: { tags?: string[] }
+): Promise<ForumPostResult> {
+  const channelId = getChannelId(channelName);
+  const forum = await getForumChannel(channelId);
+
+  // Resolve tag names to IDs
+  let appliedTags: string[] | undefined;
+  if (opts?.tags?.length) {
+    const available = forum.availableTags;
+    appliedTags = opts.tags
+      .map(name => available.find(t => t.name.toLowerCase() === name.toLowerCase()))
+      .filter((t): t is NonNullable<typeof t> => t !== undefined)
+      .map(t => t.id);
+  }
+
+  const chunks = sendChunked(content);
+  const thread = await forum.threads.create({
+    name: title.slice(0, 100),
+    message: { content: chunks[0]! },
+    appliedTags,
+  });
+
+  // Send remaining chunks as follow-up messages
+  for (const chunk of chunks.slice(1)) {
+    await thread.send(chunk);
+  }
+
+  console.log(`[poster] Created forum post "${title}" in #${channelName} (${content.length} chars)`);
+
+  return {
+    threadId: thread.id,
+    messageId: thread.id,
+    channel: channelName,
+    threadName: title,
+  };
+}
+
+/**
+ * List available tags for a forum channel.
+ */
+export async function getForumTags(channelName: string): Promise<Array<{ id: string; name: string }>> {
+  const channelId = getChannelId(channelName);
+  const forum = await getForumChannel(channelId);
+  return forum.availableTags.map(t => ({ id: t.id, name: t.name }));
 }
 
 /**

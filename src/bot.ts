@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, TextChannel, Events, Partials, MessageType } from 'discord.js';
+import { Client, GatewayIntentBits, TextChannel, ForumChannel, Events, Partials, MessageType } from 'discord.js';
 import { getConfig } from './config.js';
 import { logMessage, logReaction } from './chat-logger.js';
 import { handleMemberJoin } from './welcome.js';
@@ -90,6 +90,15 @@ export async function getTextChannel(channelId: string): Promise<TextChannel> {
   const channel = await c.channels.fetch(channelId);
   if (!channel?.isTextBased() || !(channel instanceof TextChannel)) {
     throw new Error(`Channel ${channelId} is not a text channel`);
+  }
+  return channel;
+}
+
+export async function getForumChannel(channelId: string): Promise<ForumChannel> {
+  const c = getClient();
+  const channel = await c.channels.fetch(channelId);
+  if (!(channel instanceof ForumChannel)) {
+    throw new Error(`Channel ${channelId} is not a forum channel`);
   }
   return channel;
 }
