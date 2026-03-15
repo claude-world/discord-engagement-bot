@@ -85,20 +85,25 @@ function getMemberStats(userId: string, isReply: boolean): MemberStats {
  * Check for achievements after a message.
  * Returns achievement name if newly earned, null otherwise.
  */
+// Track which achievements have been announced (persists in memory per session)
+const announcedAchievements = new Set<string>();
+
 export function checkAchievements(userId: string, isReply: boolean): string | null {
   const stats = getMemberStats(userId, isReply);
 
   for (const [id, achievement] of Object.entries(ACHIEVEMENTS)) {
-    if (achievement.check(stats)) {
-      // Simple dedup: only trigger on exact threshold
-      if (id === 'first_message' && stats.messageCount !== 1) continue;
-      if (id === 'active_3' && stats.messageCount !== 10) continue;
-      if (id === 'streak_7' && stats.streakDays !== 7) continue;
-      if (id === 'topic_expert' && stats.topTopicCount !== 20) continue;
-      if (id === 'helper' && stats.replyCount !== 5) continue;
+    if (!achievement.check(stats)) continue;
 
-      return achievement.name;
-    }
+    // Dedup key: userId + achievementId
+    const key = `${userId}:${id}`;
+    if (announcedAchievements.has(key)) continue;
+
+    // Skip "first_message" if user already has history from backfill
+    // (messageCount jumps from backfill data, not truly first message)
+    if (id === 'first_message' && stats.messageCount > 2) continue;
+
+    announcedAchievements.add(key);
+    return achievement.name;
   }
   return null;
 }
