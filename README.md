@@ -1,5 +1,10 @@
 # Discord Engagement Bot
 
+[![CI](https://github.com/claude-world/discord-engagement-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/claude-world/discord-engagement-bot/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/claude-world/discord-engagement-bot)](https://github.com/claude-world/discord-engagement-bot/releases)
+[![Node](https://img.shields.io/badge/node-%3E%3D22.12-brightgreen)](package.json)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Automated Discord community engagement bot for [Claude World Taiwan](https://discord.gg/claude-world). Generates and posts scheduled content using the Claude CLI, logs community activity, monitors Claude Code releases, and exposes a RESTful API consumed by both a standalone web dashboard and an Electron menubar app.
 
 ## Features
@@ -7,13 +12,23 @@ Automated Discord community engagement bot for [Claude World Taiwan](https://dis
 - **Scheduled Posts** — Six cron jobs: daily tips, lunch discussions, cowork reminders, weekly roundups, weekend challenges, and automated version-change announcements
 - **Claude-Powered Content** — Calls `claude -p` (with optional MCP tools) to generate fresh, knowledge-grounded posts for every job
 - **MCP Integration** — Uses `trend-pulse` (real-time trending data, zero auth) and `cf-browser` (web scraping via Cloudflare Browser Rendering) to enrich generated content
-- **Knowledge Base** — Twelve curated markdown files covering Claude Code, MCP, hooks, agents, prompt engineering, and more; injected into prompts for factual accuracy
+- **Knowledge Base** — Twelve curated markdown files covering Claude Code, MCP, hooks, agents, prompt engineering, and the Claude API (current Claude 5.5 models); injected into prompts for factual accuracy
 - **Natural Language Commander** — Type commands like `發一篇關於 MCP 的技巧` or shortcut aliases (`發技巧`, `tip`, `roundup`) to generate and post on demand
+- **CLI** — `engagement-bot <command>` for every bot operation, with offline/connected separation and `--json` output for scripting
 - **Chat Logger** — Passively records every member message and reaction; builds per-user topic interest profiles stored in `data/chat-log.jsonl` and `data/users.json`
-- **Version Checker** — Polls `claude --version` every 4 hours and automatically posts release notes to `#news` when a new version is detected
+- **Engagement & Knowledge Engine** — Achievement badges, tech-question hints, and 📌 reaction pin collection
+- **Version Checker** — Polls `claude --version` every 4 hours and, when a new version appears, posts its notes from the official Claude Code CHANGELOG to `#news`
 - **Web UI** — Standalone React dashboard (no Electron required) at `http://localhost:5174`; communicates with the bot via the HTTP API
 - **Electron Menubar App** — macOS system-tray app with compact and full-dashboard modes
-- **HTTP API** — RESTful API on port 3456 used by the web UI and Electron IPC handlers
+- **HTTP API** — Local-only RESTful API on port 3456 used by the web UI
+
+## Requirements
+
+- **Node.js 22.12 or newer** (CI runs Node 22.12, 24, and 26)
+- **Claude Code CLI** (`claude`) on your `PATH`, or its absolute path in `CLAUDE_CLI_PATH`
+- **A Discord bot** with the privileged **Server Members** and **Message Content** intents enabled in the Developer Portal
+- **macOS 13 or newer** for the Electron menubar app (Electron 44)
+- *(Optional)* Python with the `trend-pulse` and `cf-browser` MCP servers installed
 
 ## Quick Start
 
@@ -34,17 +49,50 @@ npm run dev
 
 # --- Alternative modes ---
 
-# Web UI (React dashboard)  — open a second terminal:
+# Web UI (React dashboard) — open a second terminal:
 npm run dev:ui              # UI at http://localhost:5174
 
-# Electron menubar app (macOS):
-npm run electron:dev
+# Electron menubar app (macOS): build once, then launch
+npm run build
+npm run electron:dev        # the first launch downloads the Electron binary
 
 # Backfill existing chat history into the log:
 npm run backfill
 
-# Package Electron app for distribution:
+# Package the Electron app (.dmg in out/):
 npm run package
+```
+
+## CLI
+
+```bash
+npm run bot -- <command> [options]   # or: node bin/bot.js <command> [options]
+npm install -g .                     # optional: link the engagement-bot command from this folder
+```
+
+Run it from the bot's folder: `.env`, `data/`, and `knowledge/` are read from the current directory.
+
+| Command | Needs Discord | Description |
+|---------|---------------|-------------|
+| `serve` | Yes | Start bot + scheduler + API + interactive REPL (default) |
+| `status` | No | Today's post count, last post, and schedule |
+| `history [--limit N] [--type X]` | No | Post history |
+| `schedule list` | No | Show scheduled jobs |
+| `schedule trigger <id>` | Yes | Run a job immediately |
+| `schedule update <id> [--enabled true\|false] [--cron "..."] [--channel X]` | No | Validate and apply a job change in this process only (not persisted; use the API or web UI to change a running bot) |
+| `post <channel> <text> [--yes]` | Yes | Post to a channel |
+| `forum <channel> --title "..." --body "..." [--tag X] [--yes]` | Yes | Create a forum post |
+| `forum tags <channel>` | Yes | List a forum channel's tags |
+| `command <text> [--preview] [--yes]` | Yes (to send) | Natural language command |
+| `chat recent [--limit N]` / `chat topics` / `chat users` | No | Chat analytics |
+| `pins` | No | Pinned/bookmarked messages |
+| `channels` | No | Available channel names |
+| `help` | No | Show help |
+
+Add `--json` to any command for a machine-readable `{ ok, data, timestamp }` envelope on stdout (logs and prompts go to stderr):
+
+```bash
+npm run bot -- schedule list --json | jq '.data[].id'
 ```
 
 ## Configuration
@@ -61,7 +109,8 @@ npm run package
 | `CHANNEL_NEWS` | No | `""` | Channel ID for version-update announcements |
 | `CHANNEL_SHOWCASE` | No | `""` | Showcase channel ID |
 | `CHANNEL_BOT_LOGS` | No | `""` | Channel for internal bot log messages |
-| `CLAUDE_CLI_PATH` | No | `claude` | Absolute path to the Claude CLI binary |
+| `CHANNEL_SHARE_YOUR_PROJECT` | No | `""` | Forum channel used by `engagement-bot forum` |
+| `CLAUDE_CLI_PATH` | No | `claude` | Path to the Claude CLI binary (used for content generation and version checks) |
 | `CONTENT_TIMEOUT` | No | `60000` | Content generation timeout in milliseconds (5000–300000) |
 
 ### `.mcp.json`
@@ -94,8 +143,11 @@ Jobs can be enabled/disabled and have their cron expression or target channel up
 
 ```
 discord-engagement-bot/
+├── bin/bot.js                CLI binary (runs src/cli.ts through tsx)
 ├── src/
-│   ├── index.ts              CLI entry point — starts bot, scheduler, and API server
+│   ├── cli.ts                CLI entry point — parses argv, dispatches commands
+│   ├── cli/                  Command handlers, output formatter, lazy Discord connection
+│   ├── index.ts              Delegates to cli.ts
 │   ├── bot.ts                discord.js client; logs all messages and reactions
 │   ├── config.ts             Zod-validated environment config
 │   ├── scheduler.ts          node-cron job registry (6 jobs, Asia/Taipei)
@@ -104,8 +156,11 @@ discord-engagement-bot/
 │   ├── poster.ts             Discord message posting with 2000-char chunking
 │   ├── history.ts            Post history tracking (data/history.json)
 │   ├── chat-logger.ts        Passive message/reaction logger; user topic profiling
+│   ├── engagement.ts         Achievement badges
+│   ├── knowledge-engine.ts   Tech-question hints and 📌 pin collection
+│   ├── welcome.ts            New member welcome (public + DM)
 │   ├── version-checker.ts    Polls claude --version; posts release notes on change
-│   ├── api-server.ts         HTTP API on port 3456
+│   ├── api-server.ts         Local HTTP API on port 3456
 │   ├── backfill.ts           One-shot script to backfill existing Discord history
 │   └── prompts/
 │       ├── context.ts        Shared system context, knowledge file mapping, MCP instructions
@@ -115,7 +170,7 @@ discord-engagement-bot/
 │       ├── release-news.ts   Version update announcement prompt
 │       └── commander.ts      Natural language command parsing prompt
 │
-├── ui/                       React 19 + Tailwind web UI (Vite, port 5174)
+├── ui/                       React 19 + Tailwind CSS 4 web UI (Vite 8, port 5174)
 │   ├── App.tsx
 │   ├── pages/
 │   │   ├── Dashboard.tsx     Overview stats and quick-action buttons
@@ -126,15 +181,15 @@ discord-engagement-bot/
 │   └── components/
 │       ├── StatusBar.tsx
 │       ├── PostPreview.tsx
-│       ├── ScheduleItem.tsx
-│       └── CommandInput.tsx
+│       └── ScheduleItem.tsx
 │
-├── electron/                 Electron 33 menubar app (macOS)
+├── electron/                 Electron 44 menubar app (macOS)
 │   ├── main.ts               Main process
 │   ├── preload.ts            IPC bridge (contextBridge)
 │   ├── tray.ts               System tray setup
-│   └── ipc-handlers.ts       IPC handlers → HTTP API calls
+│   └── ipc-handlers.ts       IPC handlers → bot, scheduler, and history modules
 │
+├── test/                     Node test runner suites (run with tsx)
 ├── knowledge/                12 markdown knowledge files (see Knowledge Base section)
 ├── data/                     Runtime data (git-ignored)
 │   ├── history.json          Post history
@@ -147,7 +202,9 @@ discord-engagement-bot/
 
 ## API Endpoints
 
-The API server runs on `http://localhost:3456`. All endpoints return JSON.
+The API server runs on `http://localhost:3456` and binds to `127.0.0.1` only. All endpoints return JSON.
+
+It only answers requests whose `Host` is `localhost` or `127.0.0.1` and whose `Origin` (when present) is the web UI at `http://localhost:5174`, and `POST` bodies must be `application/json`. This keeps other websites open in your browser from driving the bot.
 
 ### Bot Status
 
@@ -170,12 +227,13 @@ The API server runs on `http://localhost:3456`. All endpoints return JSON.
 | `POST` | `/api/schedule/trigger` | `{ id: string }` | Trigger a job immediately |
 | `POST` | `/api/schedule/update` | `{ id: string, updates: { cron?, channel?, enabled? } }` | Update a job and restart the scheduler |
 
-### History and Channels
+### History, Channels, and Knowledge
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/api/history` | Full post history array |
 | `GET` | `/api/channels` | List of configured channel names |
+| `GET` | `/api/knowledge/pins` | Messages collected with the 📌 reaction |
 
 ### Chat Analytics
 
@@ -191,7 +249,7 @@ Twelve curated markdown files in `knowledge/` are injected into content-generati
 
 | File | Source | Contents |
 |------|--------|---------|
-| `claude-code-basics.md` | Claude Code docs | Core CLI usage, slash commands, flags |
+| `claude-code-basics.md` | Claude Code docs | Core CLI usage, models, effort levels, slash commands, permission modes |
 | `claude-md-guide.md` | Claude Code docs | CLAUDE.md design and best practices |
 | `mcp-guide.md` | Claude Code docs | MCP configuration and common servers |
 | `hooks-guide.md` | Claude Code docs | Hooks system (PreToolUse, PostToolUse) |
@@ -200,32 +258,37 @@ Twelve curated markdown files in `knowledge/` are injected into content-generati
 | `claude-world-tutorials.md` | claude-world.com | 24-session tutorial course reference |
 | `claude-cookbooks.md` | Anthropic cookbooks | Official cookbook patterns |
 | `official-skills-reference.md` | Anthropic skills | Official skills reference |
-| `prompt-engineering.md` | Anthropic docs | Prompt engineering techniques |
-| `tool-use-guide.md` | Anthropic docs | Tool use and function calling |
-| `anthropic-api-fundamentals.md` | Anthropic docs | API fundamentals and SDK usage |
+| `prompt-engineering.md` | Claude Platform docs | Prompt engineering techniques |
+| `tool-use-guide.md` | Claude Platform docs | Tool use and function calling |
+| `anthropic-api-fundamentals.md` | Claude Platform docs | API fundamentals, current models, and SDK usage |
 
 ## Scripts
 
 | Script | Command | Description |
 |--------|---------|-------------|
 | Bot + API server | `npm run dev` | Start the bot and HTTP API (port 3456) |
+| CLI | `npm run bot -- <command>` | Run any CLI command |
 | Web UI | `npm run dev:ui` | Start the Vite dev server (port 5174) |
 | Backfill | `npm run backfill` | Fetch and log all existing Discord messages |
+| Lint | `npm run lint` | Type-check the bot, the web UI, and the tests |
+| Test | `npm test` | Run the test suites |
+| Build | `npm run build` | Compile TypeScript to `dist/` and the web UI to `ui/dist/` |
 | Electron dev | `npm run electron:dev` | Vite + tsc watch + Electron (concurrent) |
-| Package | `npm run package` | Build and package Electron app for macOS |
+| Package | `npm run package` | Build and package the Electron app for macOS |
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Runtime | Node.js + TypeScript 5 |
+| Runtime | Node.js 22.12+ + TypeScript 7 |
 | Discord | discord.js v14 |
 | Content generation | Claude CLI (`claude -p`) |
 | MCP tools | trend-pulse, cf-browser |
-| Scheduling | node-cron (Asia/Taipei) |
-| Web UI | React 19 + Tailwind CSS + Vite 6 |
-| Desktop | Electron 33 + menubar |
-| Config validation | Zod |
+| Scheduling | node-cron 4 (Asia/Taipei) |
+| Web UI | React 19 + Tailwind CSS 4 + Vite 8 |
+| Desktop | Electron 44 + menubar |
+| Config validation | Zod 4 |
+| Tests | Node test runner + tsx |
 | Data storage | JSONL + JSON flat files |
 
 ## License

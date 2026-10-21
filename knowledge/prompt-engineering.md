@@ -157,14 +157,16 @@ Show your work:
 **Customer Support**: Combine role + authority limits + escalation rules
 **Content Generation**: Show style examples + format constraints + specific topics
 
-## Parameter Tuning for Better Prompts
+## Steering Output Without Sampling Parameters
 
-| Goal | Temperature | Strategy |
-|------|-------------|----------|
-| Factual accuracy | 0-0.3 | Low temp + explicit constraints |
-| Consistency | 0-0.3 | Low temp + specific format |
-| Creativity | 0.8-1 | Higher temp + fewer constraints |
-| Balanced | 0.7 | Default, start here |
+Current Claude models don't use `temperature`, `top_p` or `top_k` (the Python SDK 1.x no longer accepts them), so the prompt does the steering:
+
+| Goal | Strategy |
+|------|----------|
+| Factual accuracy | Explicit constraints + "say so if you are not sure" |
+| Consistency | Specific output format + examples |
+| Creativity | Fewer constraints + ask for several distinct options |
+| Balanced | Clear task + one example, then iterate |
 
 ## Iterative Refinement Checklist
 
@@ -241,14 +243,14 @@ Test 4: "The price is high but quality is good" → Should classify as mixed
 - ❌ Writing one long prompt and hoping it works
 - ❌ Not including examples for complex tasks
 - ❌ Assuming Claude knows domain-specific terms
-- ❌ Treating high temperature as always better for creativity
+- ❌ Reaching for `temperature` instead of rewriting the prompt (current models ignore it)
 - ❌ Not testing with realistic data
 - ❌ Overly polite ("If you would be so kind...") vs. direct instructions
 - ❌ Mixing multiple unrelated tasks in one prompt
 
 ## Resources
 
-- Anthropic prompt engineering guide: https://docs.anthropic.com/en/docs/build-a-claude-bot-with-tool-use
-- Detailed techniques: https://docs.anthropic.com/en/docs/resources/prompt-engineering
-- Prompt testing & evaluation: https://docs.anthropic.com/en/docs/guides/prompt-evaluation
+- Anthropic prompt engineering guide: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview
+- Detailed techniques: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+- Prompt testing & evaluation: https://platform.claude.com/docs/en/test-and-evaluate/develop-tests
 - Real-world examples: Check the Anthropic courses repository

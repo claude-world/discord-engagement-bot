@@ -13,7 +13,7 @@
 | **algorithmic-art** | Creative | Create generative art using p5.js with seeded randomness, particle systems, and flow fields. Two-phase workflow: philosophy → p5.js implementation. |
 | **brand-guidelines** | Design | Apply company brand identity (colors, typography, spacing) to any artifact. Reference Anthropic's official palette and font pairings. |
 | **canvas-design** | Design | Create static visual designs (posters, artwork) in PNG/PDF. Philosophy-driven workflow similar to algorithmic-art. |
-| **claude-api** | Development | Guide building LLM apps with Claude API across 9 languages (Python, TypeScript, Java, Go, Ruby, C#, PHP, Scala, Kotlin). Default: Opus 4.6 + adaptive thinking + streaming. |
+| **claude-api** | Development | Guide building LLM apps with Claude API across 9 languages (Python, TypeScript, Java, Go, Ruby, C#, PHP, Scala, Kotlin). Default: Opus 5.5 (`claude-opus-5-5`) + adaptive thinking + streaming. |
 | **doc-coauthoring** | Writing | Structured 3-stage workflow for collaborative document creation: Context Gathering → Refinement & Structure → Reader Testing. |
 | **docx** | Documents | Create, read, edit Word documents. Tools: `docx-js` (new), pandoc (read), unpack/repack XML (edit), LibreOffice conversion. |
 | **frontend-design** | Development | Build production-grade React/HTML/CSS interfaces with bold aesthetic directions (brutalism, maximalism, minimalism, etc.). Avoid "AI slop" aesthetics. |

@@ -97,7 +97,7 @@ messages = [
 ]
 
 response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-5-5",
     max_tokens=1024,
     tools=tools,
     messages=messages
@@ -140,7 +140,7 @@ messages.append({
 
 # Get Claude's final response
 final_response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-5-5",
     max_tokens=1024,
     tools=tools,
     messages=messages
@@ -149,34 +149,34 @@ final_response = client.messages.create(
 
 ## Tool Choice Parameter
 
-Controls when Claude calls tools:
+Controls when Claude calls tools. `tool_choice` is always an object with a `type`:
 
-### `tool_choice: "auto"` (default)
+### `tool_choice: {"type": "auto"}` (default)
 Claude decides whether to use tools or not.
 
 ```python
 response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-5-5",
     max_tokens=1024,
     tools=tools,
-    tool_choice="auto",  # Default behavior
+    tool_choice={"type": "auto"},  # Default behavior
     messages=messages
 )
 ```
 
 **Tip**: Claude can be "over-eager" with auto. Write detailed system prompts to guide when tools are needed.
 
-### `tool_choice: "any"`
+### `tool_choice: {"type": "any"}`
 Claude **must** call at least one tool. Useful for:
 - Forcing structured output extraction
 - Ensuring calculation/lookup always happens
 
 ```python
 response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-5-5",
     max_tokens=1024,
     tools=tools,
-    tool_choice="any",  # Force tool use
+    tool_choice={"type": "any"},  # Force tool use
     messages=messages
 )
 ```
@@ -184,11 +184,11 @@ response = client.messages.create(
 **Example use case**: Force Claude to use a `print_sentiment_scores` tool to guarantee JSON output.
 
 ### `tool_choice: {"type": "tool", "name": "specific_tool"}`
-Force a specific tool.
+Force a specific tool. (`{"type": "none"}` does the opposite: Claude may not call any tool.)
 
 ```python
 response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-5-5",
     max_tokens=1024,
     tools=tools,
     tool_choice={"type": "tool", "name": "get_stock_price"},
@@ -219,10 +219,10 @@ tools = [
 
 # Force Claude to use the tool (and thus return JSON-compatible structure)
 response = client.messages.create(
-    model="claude-3-5-sonnet-20241022",
+    model="claude-sonnet-5-5",
     max_tokens=1024,
     tools=tools,
-    tool_choice="any",  # Forces structured output
+    tool_choice={"type": "any"},  # Forces structured output
     messages=[{"role": "user", "content": "Analyze this tweet sentiment: ..."}]
 )
 ```
@@ -271,7 +271,8 @@ if response.stop_reason == "tool_use":
 - ❌ Not handling the `tool_use` stop reason
 - ❌ Tool descriptions too vague (Claude won't know when to call)
 - ❌ Required parameters that are sometimes undefined
-- ❌ Forcing tools when Claude doesn't need them (`tool_choice: "any"` overuse)
+- ❌ Forcing tools when Claude doesn't need them (`tool_choice={"type": "any"}` overuse)
+- ❌ Passing `tool_choice` as a bare string like `"auto"` (the API expects an object)
 - ❌ Not validating tool outputs before sending back
 
 ## Error Handling Example
@@ -292,6 +293,6 @@ result = safe_tool_execution(block.name, block.input)
 
 ## Resources
 
-- Official tool use docs: https://docs.anthropic.com/en/docs/build-a-claude-bot-with-tool-use
-- Input schema guide: https://docs.anthropic.com/en/docs/build-a-claude-bot-with-tool-use/tool-input-types-and-validation
+- Official tool use docs: https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview
+- Defining tools and input schemas: https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools
 - Real-world examples: Check Anthropic's courses repository

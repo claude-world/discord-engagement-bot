@@ -114,7 +114,7 @@ export const MCP_INSTRUCTIONS = `
    - browser_content(url) — 抓網頁純文字
    - browser_screenshot(url) — 截圖
    - browser_links(url) — 抓連結
-   - 可以抓 Anthropic 官方部落格（claude.ai/blog）、文件等最新資訊
+   - 可以抓 Anthropic 官方部落格（claude.com/blog、anthropic.com/news）、文件（code.claude.com/docs、platform.claude.com/docs）等最新資訊
 
 工作流程：
 1. 先用 trend-pulse 查詢 AI / Claude 相關趨勢
