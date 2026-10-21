@@ -2,7 +2,9 @@ appId: com.claudeworld.bot
 productName: Claude World Bot
 directories:
   output: out
-  buildResources: assets
+  # No app icon yet: assets/icon.png is the 22x22 tray glyph, and macOS app icons
+  # must be at least 512x512, so the bundle uses Electron's default icon.
+  buildResources: build
 files:
   - dist/**/*
   - ui/dist/**/*
@@ -12,7 +14,6 @@ files:
 mac:
   category: public.app-category.developer-tools
   target: dmg
-  icon: assets/icon.png
 dmg:
   title: Claude World Bot
   contents:
