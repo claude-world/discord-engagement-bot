@@ -51,7 +51,7 @@ export default function Commander() {
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="輸入指令... 例如：發一篇關於 MCP 設定的進階技巧"
-          className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-base resize-none focus:outline-none focus:border-indigo-500 min-h-[80px]"
+          className="w-full bg-transparent border border-gray-700 rounded-lg px-4 py-3 text-base resize-none focus:outline-hidden focus:border-indigo-500 min-h-[80px]"
           rows={3}
           disabled={loading}
         />

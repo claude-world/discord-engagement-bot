@@ -6,48 +6,46 @@
   "bin": {
     "engagement-bot": "./bin/bot.js"
   },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "tsx src/cli.ts serve",
     "cli": "tsx src/cli.ts",
     "bot": "tsx src/cli.ts",
     "backfill": "tsx src/backfill.ts",
-    "dev:ui": "vite ui",
-    "build": "tsc && vite build ui",
-    "electron:dev": "concurrently \"vite ui\" \"tsc -w\" \"electron .\"",
-    "electron:build": "tsc && vite build ui && electron-builder",
+    "dev:ui": "vite",
+    "build": "tsc && vite build",
+    "electron:dev": "concurrently \"vite\" \"tsc -w\" \"electron .\"",
+    "electron:build": "tsc && vite build && electron-builder",
     "package": "npm run build && electron-builder --mac",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit && tsc -p ui && tsc -p test",
+    "test": "tsx --test \"test/*.test.ts\""
   },
   "dependencies": {
-    "discord.js": "^14.16.3",
-    "dotenv": "^16.4.7",
-    "electron-store": "^10.0.0",
-    "menubar": "^9.5.0",
-    "node-cron": "^3.0.3",
-    "zod": "^3.23.8"
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.8",
+    "menubar": "^9.5.3",
+    "node-cron": "^4.6.0",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "@types/node-cron": "^3.0.11",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.20",
-    "concurrently": "^9.1.0",
-    "electron": "^41.0.2",
-    "electron-builder": "^26.8.1",
-    "postcss": "^8.4.49",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "tailwindcss": "^3.4.16",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2",
-    "vite": "^6.0.0"
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "concurrently": "^10.0.6",
+    "electron": "^44.9.2",
+    "electron-builder": "^26.15.3",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
   },
   "overrides": {
-    "undici": "^7.5.0",
-    "tar": "^7.5.11",
-    "@tootallnate/once": "^3.0.1",
-    "yauzl": "^3.2.1"
+    "global-agent": "^4.1.3"
   }
 }

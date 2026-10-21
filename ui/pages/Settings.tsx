@@ -51,7 +51,7 @@ export default function Settings() {
       <div className="bg-gray-800 rounded-xl p-4 space-y-2">
         <h2 className="text-lg font-semibold">關於</h2>
         <div className="text-sm text-gray-400 space-y-1">
-          <div>Discord Engagement Bot v1.0.0</div>
+          <div>Discord Engagement Bot v{__APP_VERSION__}</div>
           <div>Claude World Taiwan</div>
           <a
             href="https://github.com/claude-world/discord-engagement-bot"

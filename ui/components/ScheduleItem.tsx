@@ -53,7 +53,7 @@ export default function ScheduleItem({ job, onToggle, onUpdateCron, onTrigger }:
             <input
               value={cronValue}
               onChange={(e) => setCronValue(e.target.value)}
-              className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs w-32 focus:outline-none focus:border-indigo-500"
+              className="bg-gray-900 border border-gray-700 rounded px-2 py-1 text-xs w-32 focus:outline-hidden focus:border-indigo-500"
               onKeyDown={(e) => e.key === 'Enter' && handleSaveCron()}
             />
             <button onClick={handleSaveCron} className="text-xs text-green-400 hover:text-green-300">

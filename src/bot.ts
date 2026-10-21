@@ -38,7 +38,7 @@ export async function initBot(): Promise<Client> {
       reject(new Error('Bot connection timed out after 30s'));
     }, 30_000);
 
-    client!.once('ready', (c) => {
+    client!.once(Events.ClientReady, (c) => {
       clearTimeout(timeout);
       console.log(`[bot] Logged in as ${c.user.tag}`);
       resolve(client!);
