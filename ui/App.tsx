@@ -5,7 +5,7 @@ import Schedule from './pages/Schedule';
 import History from './pages/History';
 import Settings from './pages/Settings';
 
-type Page = 'dashboard' | 'commander' | 'schedule' | 'history' | 'settings';
+export type Page = 'dashboard' | 'commander' | 'schedule' | 'history' | 'settings';
 
 const NAV_ITEMS: { id: Page; icon: string; label: string }[] = [
   { id: 'dashboard', icon: '📊', label: '總覽' },

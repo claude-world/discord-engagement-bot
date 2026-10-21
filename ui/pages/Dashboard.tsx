@@ -1,10 +1,11 @@
 import React from 'react';
 import { useStatus, useSchedule } from '../hooks/useIPC';
 import StatusBar from '../components/StatusBar';
+import type { Page } from '../App';
 
 interface Props {
   compact?: boolean;
-  onNavigate: (page: string) => void;
+  onNavigate: (page: Page) => void;
 }
 
 export default function Dashboard({ compact, onNavigate }: Props) {
@@ -54,7 +55,7 @@ export default function Dashboard({ compact, onNavigate }: Props) {
           <input
             type="text"
             placeholder="輸入指令..."
-            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-indigo-500"
+            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm focus:outline-hidden focus:border-indigo-500"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 const input = e.currentTarget.value.trim();

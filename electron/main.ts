@@ -4,13 +4,17 @@ import { resolve } from 'path';
 import { setupTray } from './tray.js';
 import { registerIpcHandlers } from './ipc-handlers.js';
 
+// Compiled to dist/electron/, so the app root (repo or app.asar) is two levels up
+const APP_ROOT = resolve(__dirname, '../..');
+const UI_INDEX = resolve(APP_ROOT, 'ui/dist/index.html');
+
 let mb: ReturnType<typeof menubar> | null = null;
 let commandCenter: BrowserWindow | null = null;
 
 function createMenubar() {
   mb = menubar({
-    index: `file://${resolve(__dirname, '../ui/dist/index.html')}`,
-    icon: resolve(__dirname, '../assets/icon.png'),
+    index: `file://${UI_INDEX}`,
+    icon: resolve(APP_ROOT, 'assets/icon.png'),
     browserWindow: {
       width: 380,
       height: 520,
@@ -55,7 +59,7 @@ export function openCommandCenter() {
     },
   });
 
-  commandCenter.loadFile(resolve(__dirname, '../ui/dist/index.html'), {
+  commandCenter.loadFile(UI_INDEX, {
     hash: '/commander',
   });
 

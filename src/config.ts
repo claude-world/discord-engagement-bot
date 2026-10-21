@@ -2,14 +2,18 @@ import { z } from 'zod';
 import { config as loadEnv } from 'dotenv';
 import { resolve } from 'path';
 
-loadEnv({ path: resolve(process.cwd(), '.env') });
+// quiet: dotenv >= 17 logs an "injected env" line on every load, which would pollute CLI output
+loadEnv({ path: resolve(process.cwd(), '.env'), quiet: true });
 
-const ConfigSchema = z.object({
-  DISCORD_BOT_TOKEN: z.string().min(1, 'DISCORD_BOT_TOKEN is required'),
-  DISCORD_GUILD_ID: z.string().min(1, 'DISCORD_GUILD_ID is required'),
-  CHANNEL_DAILY_TIPS: z.string().min(1, 'CHANNEL_DAILY_TIPS is required'),
-  CHANNEL_GENERAL: z.string().min(1, 'CHANNEL_GENERAL is required'),
-  CHANNEL_ANNOUNCEMENTS: z.string().min(1, 'CHANNEL_ANNOUNCEMENTS is required'),
+// Same message whether the variable is missing or empty
+const required = (name: string) => z.string({ error: `${name} is required` }).min(1, `${name} is required`);
+
+export const ConfigSchema = z.object({
+  DISCORD_BOT_TOKEN: required('DISCORD_BOT_TOKEN'),
+  DISCORD_GUILD_ID: required('DISCORD_GUILD_ID'),
+  CHANNEL_DAILY_TIPS: required('CHANNEL_DAILY_TIPS'),
+  CHANNEL_GENERAL: required('CHANNEL_GENERAL'),
+  CHANNEL_ANNOUNCEMENTS: required('CHANNEL_ANNOUNCEMENTS'),
   CHANNEL_NEWS: z.string().default(''),
   CHANNEL_SHOWCASE: z.string().default(''),
   CHANNEL_BOT_LOGS: z.string().default(''),

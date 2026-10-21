@@ -3,7 +3,7 @@
  * Fetches all messages from all channels and stores them.
  * Usage: npx tsx src/backfill.ts
  */
-import { Client, GatewayIntentBits, TextChannel, Collection, Message } from 'discord.js';
+import { Client, Events, GatewayIntentBits, TextChannel, Collection, Message } from 'discord.js';
 import { getConfig, getChannelNames } from './config.js';
 import { logMessage } from './chat-logger.js';
 
@@ -46,7 +46,7 @@ async function main() {
   });
 
   await new Promise<void>((resolve, reject) => {
-    client.once('ready', () => resolve());
+    client.once(Events.ClientReady, () => resolve());
     client.login(config.DISCORD_BOT_TOKEN).catch(reject);
   });
 

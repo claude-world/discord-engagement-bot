@@ -5,11 +5,13 @@
 import { execFile } from 'child_process';
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
+import { getConfig } from './config.js';
 import { generateContent } from './content-generator.js';
 import { buildReleaseNewsPrompt } from './prompts/release-news.js';
 import { postToChannel, logToBot } from './poster.js';
 
 const VERSION_FILE = resolve(process.cwd(), 'data', 'last-version.txt');
+const CHANGELOG_URL = 'https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md';
 
 function getLastKnownVersion(): string {
   try {
@@ -27,7 +29,7 @@ function saveVersion(version: string): void {
 
 async function getCurrentVersion(): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile('claude', ['--version'], { timeout: 10_000 }, (err, stdout) => {
+    execFile(getConfig().CLAUDE_CLI_PATH, ['--version'], { timeout: 10_000 }, (err, stdout) => {
       if (err) return reject(err);
       // Output: "2.1.76 (Claude Code)"
       const match = stdout.trim().match(/^([\d.]+)/);
@@ -36,10 +38,30 @@ async function getCurrentVersion(): Promise<string> {
   });
 }
 
+/**
+ * Extract one version's notes from the Claude Code CHANGELOG ("## 2.1.305" sections).
+ */
+export function extractChangelogSection(markdown: string, version: string): string {
+  const lines = markdown.split('\n');
+  const start = lines.findIndex(line => line.trim() === `## ${version}`);
+  if (start === -1) return '';
+  const next = lines.findIndex((line, i) => i > start && line.startsWith('## '));
+  return lines.slice(start + 1, next === -1 ? undefined : next).join('\n').trim();
+}
+
 async function getChangelog(version: string): Promise<string> {
-  // Try to fetch changelog from npm or GitHub
+  // Prefer the official CHANGELOG: the model cannot know a release newer than its training data
+  try {
+    const res = await fetch(CHANGELOG_URL, { signal: AbortSignal.timeout(15_000) });
+    if (res.ok) {
+      const section = extractChangelogSection(await res.text(), version);
+      if (section) return section;
+    }
+  } catch {}
+
+  // Fallback: ask Claude
   return new Promise((resolve) => {
-    execFile('claude', ['-p', '--model', 'sonnet',
+    execFile(getConfig().CLAUDE_CLI_PATH, ['-p', '--model', 'sonnet',
       `What are the key changes in Claude Code version ${version}? List the main new features, improvements, and fixes in bullet points. Be concise.`
     ], { timeout: 60_000 }, (err, stdout) => {
       if (err || !stdout.trim()) {

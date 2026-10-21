@@ -2,7 +2,7 @@
  * HTTP API server for web UI (non-Electron mode).
  * Exposes the same operations as Electron IPC handlers.
  */
-import { createServer, IncomingMessage, ServerResponse } from 'http';
+import { createServer, IncomingMessage, Server, ServerResponse } from 'http';
 import { isConnected } from './bot.js';
 import { parseCommand, executeCommand } from './commander.js';
 import { getSchedule, updateJob, triggerJob } from './scheduler.js';
@@ -13,11 +13,35 @@ import { getPinnedEntries } from './knowledge-engine.js';
 
 const PORT = 3456;
 const MAX_BODY = 64 * 1024; // 64 KB
+const ALLOWED_ORIGIN = 'http://localhost:5174'; // web UI dev server (vite.config.mts)
+const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1']);
 
 function cors(res: ServerResponse) {
-  res.setHeader('Access-Control-Allow-Origin', 'http://localhost:5174');
+  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+function hostnameOf(host: string | undefined): string {
+  try {
+    return new URL(`http://${host}`).hostname;
+  } catch {
+    return '';
+  }
+}
+
+/**
+ * Block requests another website could send through the operator's browser:
+ * a non-loopback Host means DNS rebinding, a foreign Origin means a cross-site request,
+ * and requiring JSON bodies forces a CORS preflight for any cross-site POST.
+ */
+function rejectRequest(req: IncomingMessage, method: string): [status: number, error: string] | null {
+  if (!LOOPBACK_HOSTS.has(hostnameOf(req.headers.host))) return [403, 'Forbidden host'];
+  if (req.headers.origin && req.headers.origin !== ALLOWED_ORIGIN) return [403, 'Forbidden origin'];
+  if (method === 'POST' && !req.headers['content-type']?.startsWith('application/json')) {
+    return [415, 'Content-Type must be application/json'];
+  }
+  return null;
 }
 
 function json(res: ServerResponse, data: unknown, status = 200) {
@@ -44,6 +68,9 @@ async function readBody(req: IncomingMessage): Promise<any> {
 async function handleRequest(req: IncomingMessage, res: ServerResponse) {
   const url = req.url ?? '/';
   const method = req.method ?? 'GET';
+
+  const rejected = rejectRequest(req, method);
+  if (rejected) return json(res, { error: rejected[1] }, rejected[0]);
 
   // CORS preflight
   if (method === 'OPTIONS') { cors(res); res.writeHead(204); res.end(); return; }
@@ -130,8 +157,12 @@ async function handleRequest(req: IncomingMessage, res: ServerResponse) {
   }
 }
 
+export function createApiServer(): Server {
+  return createServer(handleRequest);
+}
+
 export function startApiServer(): void {
-  const server = createServer(handleRequest);
+  const server = createApiServer();
   server.listen(PORT, '127.0.0.1', () => {
     console.log(`[api] HTTP API running at http://localhost:${PORT}`);
   });

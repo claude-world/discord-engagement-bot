@@ -1,4 +1,4 @@
-import cron from 'node-cron';
+import cron, { type ScheduledTask } from 'node-cron';
 import { generateContent } from './content-generator.js';
 import { postToChannel, logToBot } from './poster.js';
 import { buildDailyTipPrompt, DAILY_TIP_FALLBACKS } from './prompts/daily-tip.js';
@@ -24,7 +24,7 @@ const DEFAULT_SCHEDULE: ScheduleJob[] = [
   { id: 'versionCheck', name: '版本檢查', cron: '0 */4 * * *', channel: 'news', enabled: true, type: 'other' },
 ];
 
-const activeTasks = new Map<string, cron.ScheduledTask>();
+const activeTasks = new Map<string, ScheduledTask>();
 let scheduleConfig: ScheduleJob[] = [...DEFAULT_SCHEDULE];
 let schedulerStarted = false;
 
@@ -107,7 +107,8 @@ export function startScheduler(): void {
 
 export function stopScheduler(): void {
   for (const task of activeTasks.values()) {
-    task.stop();
+    // destroy() also unregisters the task from node-cron (stop() alone leaks it on every restart)
+    task.destroy();
   }
   activeTasks.clear();
 }
